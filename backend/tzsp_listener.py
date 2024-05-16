@@ -2,20 +2,28 @@
 import argparse
 import asyncio
 import logging
+import pathlib
 import struct
 
 import scapy
-from scapy.all import load_layer
+from Crypto.Cipher import Salsa20
+from scapy.all import AsyncSniffer, load_layer
 from scapy.layers.l2 import Ether
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+handler = logging.FileHandler('tzsp.log')
+handler.setLevel(logging.DEBUG)
+logging.root.addHandler(handler)
+
 log = logging.getLogger('tzsp_listener')
+PACKET_LOG = pathlib.Path('en2.packet')
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description='DESCRIPTION')
     parser.add_argument('--port', type=int, default=37009)
+    parser.add_argument('--iface', default='enp6s0')
     return parser.parse_args()
 
 
@@ -67,71 +75,60 @@ def processTag(tag, details=False):
     return i
 
 
-class UdpProto(asyncio.Protocol):
+def make_hexfriendly(payload: bytes) -> str:
+    """
+    split per 8, encode as hex values
+    """
+    out = ['\n']
+    cnt = 0
+    for i in range(0, len(payload), 8):
+        out.append(' '.join([f'{x:02X}' for x in payload[i : i + 8]]))
+        cnt += 1
+        if cnt % 4 == 0:
+            out.append('\n')
+    return '    '.join(out)
+
+
+class POEProto(asyncio.Protocol):
     def __init__(self, receiver):
         self.receiver = receiver
         self.fragments = {}
-        log.debug('init layer')
+        self.enc = None
         load_layer('inet')
         log.debug('loaded ok')
 
     # ue.payload.payload.payload.load
     def datagram_received(self, data, addr):
+        # log.debug(f'{data=}')
         hdr_size = 0x2A - 1
         tags_len = processTag(data[4:])
         hdr_size += tags_len
         ue = Ether(data[4 + tags_len :])
+        self.process_inner(ue)
+
+    def process_inner(self, ue):
         ip = ue.payload
 
-        log.debug(f'{ip} {ip.version=} {ip.proto=}')
+        # log.debug(f'{ip} {ip.version=} {ip.proto=}')
+
         if ip.version != 4:
+            log.info('skip not ip')
             return
 
         # TCP=6 UDP=17
         if ip.proto != 6:
+            log.info('skip not tcp')
             return
 
         # if ip.flags == 1:  # multifragment
-        # with open('en.packet', 'w') as f:
-        #     f.write(str(data))
         payload = ip.payload
-        if ip.flags == 1:
-            key = f'{ip.src}=>{ip.dst}'
-            if key not in self.fragments:
-                self.fragments[key] = {'tcp': payload, 'packets': {}}
-            self.fragments[key]['packets'][ip.frag] = payload.load
+        if not isinstance(payload.payload, scapy.packet.Raw):
+            # log.info(f'skip not raw: {type(payload.payload)}')
             return
-        elif ip.frag > 0:
-            key = f'{ip.src}=>{ip.dst}'
-            if key in self.fragments:
-                self.fragments[key]['packets'][ip.frag] = payload.load
 
-                payload = self.fragments[key]['tcp']
-                ks = sorted(self.fragments[key]['packets'])
-                fragments = []
-                for k in ks:
-                    fragments.append(self.fragments[key]['packets'][k])
-                payload = b''.join(fragments)
-                import hashlib
+        # payload = payload.load
 
-                print(f'HASH: {hashlib.md5(payload).hexdigest()}')
-                del self.fragments[key]
-            else:
-                # payload = udp.load
-                return
-        else:
-            log.debug(f'{payload=} => {dir(payload)}')
-            if len(payload) == 0:
-                return
-            if not isinstance(payload.payload, scapy.packet.Raw):
-                return
-            #payload = payload.load
-
-        # print(f'FLAGS: {ip.flags} => LEN: {ip.len} => FRAG: {ip.frag} SUM: {ip.chksum} / {udp!r}')
-        #eft = (16900 <= payload.sport <= 17100) or (16900 <= payload.dport <= 17100)
-        #if not eft:
-        #    return
-
+        # log.debug(f'{ip=}')
         self.receiver(
             {
                 'incoming': ip.dst.startswith('192.168.'),
@@ -140,57 +137,44 @@ class UdpProto(asyncio.Protocol):
                 'dst_port': payload.dport,
             }
         )
-
-        src = read_ip(data, 0x49, hdr_size)
-        dst = read_ip(data, 0x4D, hdr_size)
-        src_port = read_port(data, 0x51, hdr_size)
-        dst_port = read_port(data, 0x53, hdr_size)
-        #eft = (16900 <= src_port <= 17100) or (16900 <= dst_port <= 17100)
-
-        # if len(data) > 1519:
-        #     print(f'Data len: {len(data)}')
-        if len(data) > 0x46 - 0x2A and data[0x46 - 0x2A] == 17:  # UDP
-            if len(data) >= 1519:
-                print(f'Data: {len(data)}')
-                with open('en.packet', 'w') as f:
-                    f.write(str(data))
-                return
-
-        # print(self.receiver)
-        #if not eft:
-        #    return
-
-        # print(f'SRC: {src}:{src_port} DST: {dst}:{dst_port} EFT: {eft}')
-        #data_offset = 0x59 - 0x2A
-        # bprint(data)
-        # print(f'LEN: {len(data)} DataOFF: {data_offset}')
-        # print(f'{src} => {dst}')
-        #rcvd = data[data_offset:]
         rcvd = payload.load
-        # print(rcvd)
-        # bprint(rcvd[:0x64])
-        with open('en2.packet', 'a') as f:
-            f.write(str(data))
+        # "expand 32-byte k"
+        if self.enc is None:
+            packet_id = rcvd[:2]
+            key, iv = '', ''
+            self.enc = Salsa20.new(key=key, nonce=iv)
+
+        with PACKET_LOG.open('a') as f:
+            sdata = str(rcvd)
+            hex_friendly = make_hexfriendly(rcvd)
+            f.write(f'sport={payload.sport} len={len(sdata)} {hex_friendly}')
+            f.write('\n')
+            f.write(sdata)
             f.write('\n')
 
         self.receiver(
             {
-                'incoming': dst.startswith('192.168.'),
+                'incoming': ip.dst.startswith('192.168.'),
                 'data': rcvd,
-                'src_port': src_port,
-                'dst_port': dst_port,
+                'src_port': payload.sport,
+                'dst_port': payload.dport,
             }
         )
 
 
 def log_receiver(received):
-    log.debug(f'received: {received}')
+    # log.debug(f'received: {received}')
+    pass
+
 
 async def start_server(args):
-    loop = asyncio.get_event_loop()
-    transport, protocol = await loop.create_datagram_endpoint(
-        lambda: UdpProto(log_receiver), local_addr=('0.0.0.0', args.port)
-    )
+    # loop = asyncio.get_event_loop()
+    # transport, protocol = await loop.create_datagram_endpoint(
+    #    lambda: POEProto(log_receiver), local_addr=('0.0.0.0', args.port)
+    # )
+    proto = POEProto(log_receiver)
+    sniffer = AsyncSniffer(iface=args.iface, filter='tcp and port 6112', prn=proto.process_inner)
+    sniffer.start()
     while True:
         try:
             await asyncio.sleep(120)
@@ -201,6 +185,8 @@ async def start_server(args):
 
 def main():
     args = parse_args()
+    if PACKET_LOG.exists():
+        PACKET_LOG.unlink()
     asyncio.run(start_server(args))
 
 
