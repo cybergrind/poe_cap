@@ -20,3 +20,19 @@ https://tbinarii.blogspot.com/2018/05/reverse-engineering-path-of-exile.html
 
 * scan for "expand 32-byte k" using scanmem
 
+
+### other
+
+
+```
+
+sudo gdb -p 2498580 --batch --ex "bt" --ex detach
+
+sudo gdb -p 2498580 --batch --ex "thread apply all bt" --ex detach
+
+sudo gdb -p 2498580 --batch --ex "b recv" --ex "c" --ex "bt" --ex detach
+
+
+sudo gdb -p $(pgrep PathOfExileStea) --batch --ex "b *0x141893d25" --ex "c" --ex "info break" --ex "del breakpoint 1" --ex "stepi 200" --ex "bt" --ex "info r" --ex detach /home/kpi/devel/github/poe_cap/poe_annotated
+```
+
