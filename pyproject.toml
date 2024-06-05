@@ -12,8 +12,9 @@ select = [
   "Q",     # flake8-quotes
 ]
 ignore = [
+  "G004",
   "Q001",
-  "Q003"
+  "Q003",
 ]
 
 [tool.ruff.format]
