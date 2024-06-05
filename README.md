@@ -36,3 +36,32 @@ sudo gdb -p 2498580 --batch --ex "b recv" --ex "c" --ex "bt" --ex detach
 sudo gdb -p $(pgrep PathOfExileStea) --batch --ex "b *0x141893d25" --ex "c" --ex "info break" --ex "del breakpoint 1" --ex "stepi 200" --ex "bt" --ex "info r" --ex detach /home/kpi/devel/github/poe_cap/poe_annotated
 ```
 
+
+find fd of connection
+
+```
+sudo lsof -p $(pgrep PathOfExileStea) | ag dtspcd
+
+PathOfExi 2666054  kpi 287u     IPv4           25423963        0t0       TCP xx:36522->203.23.178.243:dtspcd (ESTABLISHED)
+
+287 <- FileDescriptor
+
+
+sudo gdb -p $(pgrep PathOfExileStea) --batch --ex "catch syscall sendmsg" --ex 'condition 1 $rdi == 287' --ex 'handle SIGUSR1 nostop noprint' --ex "i b" --ex "c" --ex "info break" --ex "bt" --ex "info r" --ex 'x /20x $rsi' --ex detach /home/kpi/devel/github/poe_cap/poe_annotated
+
+
+
+# User-level applications use as integer registers for passing the sequence %rdi, %rsi, %rdx, %rcx, %r8 and %r9. The kernel interface uses %rdi, %rsi, %rdx, %r10, %r8 and %r9.
+
+# read: man 2 recvfrom
+
+# ssize_t recvmsg(int sockfd, struct msghdr *msg, int flags);
+
+
+# check rsi register and find who writes to it
+# 0x1000ff400
+sudo gdb -p $(pgrep PathOfExileStea) --batch --ex 'watch 0x1000ff400' --ex "i b" --ex "c" --ex "bt" --ex "info r" --ex detach /home/kpi/devel/github/poe_cap/poe_annotated
+
+
+```
+
