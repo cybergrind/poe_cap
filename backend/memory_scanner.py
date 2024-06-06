@@ -12,7 +12,6 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(n
 log = logging.getLogger('memory_scanner')
 PROC_NAME = 'PathOfExileStea'
 KEY_PREFIX = 'expand 32-byte k'
-KEY_PREFIX = 'Travic did'
 
 
 def find_process(proc_name):
