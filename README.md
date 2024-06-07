@@ -1,5 +1,10 @@
 # poe_cap
 
+```
+#define PATCHSERVER_PORT 12995
+#define LOGINSERVER_PORT 20481
+#define GAMESERVER_PORT 6112
+```
 
 https://koobik.net/mikrotik-sniff-tzsp/
 

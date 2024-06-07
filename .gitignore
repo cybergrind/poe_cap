@@ -161,3 +161,6 @@ cython_debug/
 /PathOfExileSteam.exe.bndb
 /poe_annotated
 /poe_annotated.debug
+/other/sample_client/main
+/other/sample_client/sample
+/external/cryptopp/
