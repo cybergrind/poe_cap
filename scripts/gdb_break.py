@@ -47,6 +47,7 @@ def parse_args():
     parser.add_argument('--r8', action='store_true')
     parser.add_argument('--r9', action='store_true')
     parser.add_argument('--usr1', action='store_true')
+    parser.add_argument('-s', '--stack', action='store_true')
     return parser.parse_args()
 
 
@@ -64,10 +65,12 @@ def main():
         cmd.extend(['--ex', f'condition 1 {args.condition}'])
 
     cmd.extend(AFTER_BREAKPOINT)
+    if args.stack:
+        cmd.extend(['--ex', 'x /30x $rsp'])
 
     for reg in ['rsi', 'rcx', 'rdx', 'r8', 'r9']:
         if getattr(args, reg):
-            cmd.extend(['--ex', f'x /30x {reg}'])
+            cmd.extend(['--ex', f'x /30x ${reg}'])
 
     cmd.extend(END)
     cmd = ' '.join([shlex.quote(x) for x in cmd])

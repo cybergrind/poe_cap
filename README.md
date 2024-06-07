@@ -20,6 +20,8 @@ https://tbinarii.blogspot.com/2018/05/reverse-engineering-path-of-exile.html
 
 * scan for "expand 32-byte k" using scanmem
 
+https://github.com/weidai11/cryptopp
+
 
 ### other
 
