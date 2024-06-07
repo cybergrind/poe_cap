@@ -36,6 +36,12 @@ sudo gdb -p 2498580 --batch --ex "b recv" --ex "c" --ex "bt" --ex detach
 sudo gdb -p $(pgrep PathOfExileStea) --batch --ex "b *0x141893d25" --ex "c" --ex "info break" --ex "del breakpoint 1" --ex "stepi 200" --ex "bt" --ex "info r" --ex detach /home/kpi/devel/github/poe_cap/poe_annotated.debug
 ```
 
+windows abi
+
+```
+func1(int a, int b, int c, int d, int e, int f);
+// a in RCX, b in RDX, c in R8, d in R9, f then e pushed on stack
+```
 
 find fd of connection
 

@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 /PathOfExileSteam.exe.bndb
 /poe_annotated
+/poe_annotated.debug
