@@ -74,3 +74,15 @@ sudo gdb -p $(pgrep PathOfExileStea) --batch --ex "catch syscall sendmsg" --ex '
 
 sudo gdb -p $(pgrep PathOfExileStea) --batch --ex 'watch 0x0081e280' --ex "i b" --ex "c" --ex "bt" --ex "info r" --ex detach /home/kpi/devel/github/poe_cap/poe_annotated.debug
 ```
+
+
+gdb xxd
+
+```
+(gdb) define xxd
+dump binary memory dump.bin $arg0 $arg0+$arg1
+shell xxd dump.bin
+end
+
+(gdb) xxd $rsp 64 
+```
