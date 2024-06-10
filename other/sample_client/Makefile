@@ -1,19 +1,31 @@
 # inclulde ../../external/cryptopp
 
 .PHONY: main sample clean
+USE_CLANG?=1
 # use clang
 CC=clang
 CXX=clang++
 # for clang add to CXXFLAGS: --target=x86_64-w64-mingw32 
 
-CC=x86_64-w64-mingw32-gcc
-CXX=x86_64-w64-mingw32-g++
-AR=x86_64-w64-mingw32-gcc-ar
+# CC=x86_64-w64-mingw32-gcc
+# CXX=x86_64-w64-mingw32-g++
+# AR=x86_64-w64-mingw32-gcc-ar
 # crosscompile for windows params
 
 CXXFLAGS=-O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic \
 	-lstdc++ -lpthread -Wl,-Bdynamic -lws2_32 -lgdi32 -lcrypt32 -luser32 -lkernel32 -static \
 	-march=native -mtune=native -fno-stack-protector -fno-strict-aliasing
+
+#CXXFLAGS+=--target=x86_64-pc-windows-msvc
+ifeq ($(USE_CLANG),1)
+	CC=/opt/llvm-mingw/bin/x86_64-w64-mingw32-gcc
+	CXX=/opt/llvm-mingw/bin/x86_64-w64-mingw32-g++
+	CXXFLAGS+=--target=x86_64-w64-mingw32
+else
+	CC=x86_64-w64-mingw32-gcc
+	CXX=x86_64-w64-mingw32-g++
+	AR=x86_64-w64-mingw32-gcc-ar
+endif
 
 
 # static link
