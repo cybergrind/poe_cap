@@ -27,7 +27,7 @@ endif
 # static link
 main: main.cpp ../../external/cryptopp/libcryptopp.a
 ifeq ($(USE_TOOLCHAIN), windows)
-	msbuild.exe main.vcxproj /p:Configuration=Release /p:Platform=x64
+	msbuild.exe main.vcxproj /p:Configuration=Debug /p:Platform=x64
 	./main.exe
 else
 	# optimize and crosscompile for windows
