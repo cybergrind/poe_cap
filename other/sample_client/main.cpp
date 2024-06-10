@@ -18,7 +18,7 @@ char* b64enc(CryptoPP::byte *inBuffer, size_t size) {
   cout << "Length: " << size << endl;
   encoder.Put(inBuffer, size);
   encoder.MessageEnd();
-  int outSize = encoder.MaxRetrievable();
+  const int outSize = encoder.MaxRetrievable();
   cout << "OutSize: " << outSize << endl;
   // allocate on heap + terminate byte
   char *outBuffer = new char[outSize + 1];
@@ -59,7 +59,7 @@ int main() {
 
     EncHandler enc(key, iv);
     // subtract 1 for null terminator
-    int outBufferSize = sizeof(plainText)-1;
+    const int outBufferSize = sizeof(plainText)-1;
     CryptoPP::byte outBuffer[outBufferSize+1];
 
     //memset(outBuffer, 0, outBufferSize);
