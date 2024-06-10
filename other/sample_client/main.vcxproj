@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="EmptyDefaultPlatformToolset">
+    <DefaultPlatformToolset Condition=" '$(DefaultPlatformToolset)' == '' ">v140</DefaultPlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="PlatformToolset">
+    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup Label="UserMacros" />
+  <ItemDefinitionGroup Condition="'$(Platform)'=='x64'" Label="X64 Configuration">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\external\cryptopp</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>..\..\external\cryptopp\x64\Output\Release</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cryptlib.lib</AdditionalDependencies>
+      <OutputFile>$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+    <Lib>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Lib>
+  </ItemDefinitionGroup>
+  <PropertyGroup Label="All Configurations">
+    <ConfigurationType>Application</ConfigurationType>
+    <TargetName>main</TargetName>
+    <TargetExt>.exe</TargetExt>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClInclude Include="cryptopp.h" />
+    <ClInclude Include="salsa.h" />
+    <ClInclude Include="base64.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>
