@@ -86,3 +86,14 @@ end
 
 (gdb) xxd $rsp 64 
 ```
+
+
+poe encryption:
+
+```
+search for hex: \x8c@\x02\x00\x00fA\x0fo\x02f
+rbp => <string for encryption>
+r9  => size, 0x14 (20)
+rax => key, 0x40 bytes (starts with expand 32-byte k)
+
+```

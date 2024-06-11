@@ -17,7 +17,7 @@ DEBUG_SYMBOLS = '/home/kpi/devel/github/poe_cap/poe_annotated.debug'
 PROC_NAME = 'PathOfExileStea'
 NO_USR1 = ['--ex', 'handle SIGUSR1 noprint nostop']
 FIND_PID = ['pgrep', PROC_NAME]
-AFTER_BREAKPOINT = ['--ex', 'info b', '--ex', 'bt full', '--ex', 'info r']
+AFTER_BREAKPOINT = ['--ex', 'info b', '--ex', 'bt', '--ex', 'info r']
 END = ['--ex', 'detach']
 
 
@@ -41,11 +41,13 @@ def parse_args():
     parser.add_argument('breakpoint', type=breakpoint_processor)
     parser.add_argument('-c', '--condition', default=None)
     # flag
-    parser.add_argument('--rsi', action='store_true')
-    parser.add_argument('--rcx', action='store_true')
-    parser.add_argument('--rdx', action='store_true')
     parser.add_argument('--r8', action='store_true')
     parser.add_argument('--r9', action='store_true')
+    parser.add_argument('--rax', action='store_true')
+    parser.add_argument('--rbp', action='store_true')
+    parser.add_argument('--rcx', action='store_true')
+    parser.add_argument('--rdx', action='store_true')
+    parser.add_argument('--rsi', action='store_true')
     parser.add_argument('--usr1', action='store_true')
     parser.add_argument('-s', '--stack', action='store_true')
     return parser.parse_args()
@@ -68,9 +70,9 @@ def main():
     if args.stack:
         cmd.extend(['--ex', 'x /30x $rsp'])
 
-    for reg in ['rsi', 'rcx', 'rdx', 'r8', 'r9']:
+    for reg in ['rsi', 'rcx', 'rax', 'rbp', 'rdx', 'r8', 'r9']:
         if getattr(args, reg):
-            cmd.extend(['--ex', f'x /30x ${reg}'])
+            cmd.extend(['--ex', f'xxd ${reg} 64'])
 
     cmd.extend(END)
     cmd = ' '.join([shlex.quote(x) for x in cmd])

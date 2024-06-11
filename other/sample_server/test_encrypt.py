@@ -17,7 +17,7 @@ INITIAL_IV = b'\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7'
 PHRASE = 'Hello, World!22'
 SAMPLE_B64_out = b'ZshjM3d7CZm5AN/NCQ=='
 SAMPLE_B64_out = b'ZshjM3d7CZm5'
-SAMPLE_B64_out = b'ZshjM3d7CZm5AN/NCdZm'
+SAMPLE_B64_out = b'smDVI8VSmyE1Wiwcq/Ohp'
 
 def main():
     enc = Salsa20.new(key=INITIAL_KEY, nonce=INITIAL_IV)
@@ -28,6 +28,8 @@ def main():
 
     # decrypt
     dec = Salsa20.new(key=INITIAL_KEY, nonce=INITIAL_IV)
+    dec_out = dec.decrypt(base64.b64decode(SAMPLE_B64_out))
+    log.debug(f'{dec_out=}')
     dec_out = dec.decrypt(base64.b64decode(SAMPLE_B64_out))
     log.debug(f'{dec_out=}')
 
