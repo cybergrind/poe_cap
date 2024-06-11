@@ -30,10 +30,12 @@ char* b64enc(CryptoPP::byte *inBuffer, size_t size) {
 class EncHandler {
 private:
     CryptoPP::Salsa20::Encryption enc;
+    CryptoPP::Salsa20::Encryption dec;
 public:
   EncHandler(CryptoPP::byte key[], CryptoPP::byte iv[]) {
     // set key and iv
     enc.SetKeyWithIV(key, KEYLENGTH, iv, IVLENGTH);
+    dec.SetKeyWithIV(key, KEYLENGTH, iv, IVLENGTH);
   }
 
   void encrypt(char *plainText, CryptoPP::byte *outBuffer) {
@@ -41,9 +43,9 @@ public:
     enc.ProcessData(outBuffer, (const CryptoPP::byte *) plainText, strlen(plainText));
   }
 
-  void decrypt(char *cipherText) {
+  void decrypt(char *cipherText, char *outBuffer) {
     // decrypt cipherText
-    enc.ProcessData((CryptoPP::byte *) cipherText, (const CryptoPP::byte *) cipherText, strlen(cipherText));
+    dec.ProcessData((CryptoPP::byte *) cipherText, (const CryptoPP::byte *) cipherText, strlen(cipherText));
   }
 };
 
@@ -69,5 +71,12 @@ int main() {
     char* out = b64enc(outBuffer, outBufferSize);
     cout << "Encrypted: " << out << endl;
     delete[] out;
+
+    cout << "Go with enc2" << endl;
+    EncHandler *enc2 = new EncHandler(key, iv);
+    char out2[outBufferSize+1];
+    cout << "Perform decryption" << endl;
+    enc2->decrypt((char *)outBuffer, out2);
+    cout << "Decrypted: " << outBuffer << endl;
     return 0;
 }

@@ -97,3 +97,15 @@ r9  => size, 0x14 (20)
 rax => key, 0x40 bytes (starts with expand 32-byte k)
 
 ```
+
+poe decryption:
+
+```
+rdx => encrypted string
+r9  => number of bytes
+rax => pointer to used key
+
+//Cryptopp::xorbuf 
+B\x0f\xb6\x04\x122\x02\x88\x04\nH\x8dR\x01Is
+// it is called from cryptopp::symmetric::processData
+```
