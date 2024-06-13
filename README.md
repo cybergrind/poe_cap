@@ -108,4 +108,12 @@ rax => pointer to used key
 //Cryptopp::xorbuf 
 B\x0f\xb6\x04\x122\x02\x88\x04\nH\x8dR\x01Is
 // it is called from cryptopp::symmetric::processData
+// hex signature: 4D 8B 0C 24 33 D2 48 8B C3 49 F7 F6
+// escaped
+M\x8b\x0c$3\xd2H\x8b\xc3
 ```
+
+
+1. save some messages
+2. manually find key and save key
+3. decrypt saved messagesn
