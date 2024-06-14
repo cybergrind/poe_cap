@@ -114,6 +114,8 @@ M\x8b\x0c$3\xd2H\x8b\xc3
 ```
 
 
+cryptopp good versions: 8.2.0 / 8.4.0
+
 1. save some messages
 2. manually find key and save key
 3. decrypt saved messagesn
