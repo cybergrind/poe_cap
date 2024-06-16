@@ -119,3 +119,11 @@ cryptopp good versions: 8.2.0 / 8.4.0
 1. save some messages
 2. manually find key and save key
 3. decrypt saved messagesn
+
+
+```
+# steam commandline
+strace -f -e trace=network -o /tmp/traced.log  %command%
+
+strace -f -e trace=connect -o /tmp/traced.log  %command%
+```

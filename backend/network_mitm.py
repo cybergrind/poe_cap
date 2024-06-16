@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import asyncio
 import logging
+import socket
+import struct
 from base64 import b64decode
 from contextlib import contextmanager, suppress
 from pathlib import Path
@@ -34,6 +36,13 @@ def iptables_reroute():
         code, _, _err = succ(cmd)
         if code:
             raise Exception(f'Error: {code} {_err}')
+        cmd = (
+            f'iptables -t nat -A PREROUTING -p tcp --dport {sport} '
+            f'-j DNAT --to-destination 127.0.0.1:{dport} '
+            '-m comment --comment poe'
+        )
+        logging.debug(f'Executing: {cmd}')
+        succ(cmd)
     with suppress(BaseException):
         yield
     # drop by comment
@@ -67,6 +76,14 @@ class POEProto(asyncio.Protocol):
         self.handler = self.packets_file.open()
 
     def connection_made(self, transport: asyncio.transports.Transport) -> None:
+        # get destination from: SO_ORIGINAL_DST
+        transport_socket = transport.get_extra_info('socket')
+        original_dst = transport_socket.getsockopt(socket.SOL_IP, 80, 16)
+        original_dst = struct.unpack('!HHBBBB', original_dst[:8])
+        self.original_ip = original_ip = '.'.join(map(str, original_dst[2:]))
+        self.original_port = original_port = original_dst[1]
+        log.debug(f'{original_ip=} {original_port=}')
+
         self.transport = transport
         self.handler.close()
         self.handler = self.packets_file.open()
@@ -77,7 +94,6 @@ class POEProto(asyncio.Protocol):
         # sport=59248 dport=20481 buffer='<BASE64>'
         while True:
             line = self.handler.readline()
-            print(f'{line=}')
             if not line:
                 return None
             sport, dport, buffer = line.split()
