@@ -2,7 +2,7 @@ def make_hexfriendly(payload: bytes) -> str:
     """
     split per 8, encode as hex values
     """
-    out = ['\n']
+    out = ['']
     cnt = 0
     for i in range(0, len(payload), 8):
         out.append(' '.join([f'{x:02X}' for x in payload[i : i + 8]]))

@@ -113,6 +113,45 @@ B\x0f\xb6\x04\x122\x02\x88\x04\nH\x8dR\x01Is
 M\x8b\x0c$3\xd2H\x8b\xc3
 ```
 
+for main.exe:
+
+```
+b *0x140070400
+
+Wine-gdb> xxd $rcx+0x48 128
+00000000: 6578 7061 6e64 2033 322d 6279 7465 206b  expand 32-byte k
+00000010: 0c0d 0e0f 0000 0000 1c1d 1e1f 0809 0a0b  ................
+00000020: 0000 0000 1819 1a1b 0405 0607 b4b5 b6b7  ................
+00000030: 1415 1617 0001 0203 b0b1 b2b3 1011 1213  ................
+00000040: 4101 4144 4952 3d5c ffff ffff ffff ff3f  A.ADIR=\.......?
+00000050: 1000 0000 0000 0000 50fb 22fe ff7f 0000  ........P.".....
+00000060: 1400 0000 4544 4952 68da 1c40 0100 0000  ....EDIRh..@....
+00000070: 18db 1c40 0100 0000 c0db 1c40 0100 0000  ...@.......@....
+
+from key_grabber_thread.cpp:
+DWORD!
+
+	newKey->salsakey[0] = (keyblobptr[9]);
+	newKey->salsakey[1] = (keyblobptr[6]);
+	newKey->salsakey[2] = (keyblobptr[3]);
+	newKey->salsakey[3] = (keyblobptr[0]);
+	newKey->salsakey[4] = (keyblobptr[11]);
+	newKey->salsakey[5] = (keyblobptr[8]);
+	newKey->salsakey[6] = (keyblobptr[5]);
+	newKey->salsakey[7] = (keyblobptr[2]);
+
+	newKey->IV[0] = (keyblobptr[10]);
+	newKey->IV[1] = (keyblobptr[7]);
+
+	newKey->timeFound = GetTickCount64();
+	newKey->foundAddress = foundAddress;
+	newKey->sourceProcess = pid;
+
+	if (newKey->salsakey[0] == 0 && newKey->salsakey[3] == 0 && newKey->salsakey[7] == 0)
+		return false; //probably an old zero-ed out key
+
+```
+
 
 cryptopp good versions: 8.2.0 / 8.4.0
 

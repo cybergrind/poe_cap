@@ -11,6 +11,7 @@ from utils.scanmem import Scanmem
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
 log = logging.getLogger('memory_scanner')
 PROC_NAME = 'PathOfExileStea'
+#PROC_NAME = 'main.exe'
 KEY_PREFIX = 'expand 32-byte k'
 
 
@@ -21,6 +22,27 @@ def find_process(proc_name):
             return proc.pid
     return None
 
+
+def extract_key(data):
+    """
+    dwords
+    base is 0x10
+    """
+    base = 0x10
+    key_order = [9, 6, 3, 0, 11, 8, 5, 2]
+    key = []
+    for i in key_order:
+        key.append(data[base + i*4:base + (i+1)*4])
+    key = b''.join(key)
+    iv_order = [10, 7]
+    iv = []
+    for i in iv_order:
+        iv.append(data[base + i*4:base + (i+1)*4])
+    iv = b''.join(iv)
+    print(f'key:')
+    print(make_hexfriendly(key))
+    print(f'iv:')
+    print(make_hexfriendly(iv))
 
 def find_by_prefix(pid, prefix):
     """
@@ -41,7 +63,8 @@ def find_by_prefix(pid, prefix):
         dump_cmd = f'dump {_match[1]} 128'
         log.debug(f'{dump_cmd=}')
         data = scanmem.send_command(dump_cmd, get_output=True)
-        print(make_hexfriendly(data))
+        #print(make_hexfriendly(data))
+        extract_key(data)
     return values
 
 
