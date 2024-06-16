@@ -1,16 +1,28 @@
 #!/usr/bin/env python3
 import asyncio
 import logging
+from base64 import b64encode
 from pathlib import Path
 
+from fan_tools.unix import succ
 from scapy.all import AsyncSniffer
 from scapy.layers.l2 import Ether
-from utils import make_hexfriendly
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
 log = logging.getLogger('sniffer')
-PACKET_LOG = Path('en2.packet')
+PACKET_DIR = Path('packet_dump')
+PACKET_DIR.mkdir(exist_ok=True)
+PORTS = {12995, 20481, 6112}
+
+
+def get_main_interface():
+    cmd = 'ip route get 1.1.1.1'
+    out = succ(cmd)[1]
+    for line in out:
+        if 'dev' in line:
+            return line.split()[2]
+    raise NotImplementedError
 
 
 class POEProto(asyncio.Protocol):
@@ -34,20 +46,22 @@ class POEProto(asyncio.Protocol):
         rcvd = payload.load
         log.debug(f'{ip=}')
 
-        with PACKET_LOG.open('a') as f:
-            sdata = str(rcvd)
-            hex_friendly = make_hexfriendly(rcvd)
-            f.write(f'sport={ip.sport} len={len(sdata)} {hex_friendly}')
+        port_name = ip.sport if ip.sport in PORTS else ip.dport
+        log_file = PACKET_DIR / f'{port_name}.log'
+
+        with log_file.open('a') as f:
+            buffer = b64encode(rcvd).decode()
+            f.write(f'sport={ip.sport} dport={ip.dport} {buffer=}')
             f.write('\n')
-            f.write(sdata)
-            f.write('\n')
+
 
 
 async def start_server():
     proto = POEProto()
     # ports: 12995, 20481, 6112
-    filter_str = 'port 12995 or port 20481 or port 6112'
-    sniffer = AsyncSniffer(iface='nordlynx', filter=filter_str, prn=proto.process_inner)
+    filter_str = ' or '.join(f'port {port}' for port in PORTS)
+
+    sniffer = AsyncSniffer(iface=get_main_interface(), filter=filter_str, prn=proto.process_inner)
     sniffer.start()
     while True:
         try:
@@ -58,8 +72,6 @@ async def start_server():
 
 
 def main():
-    if PACKET_LOG.exists():
-        PACKET_LOG.unlink()
     asyncio.run(start_server())
 
 
