@@ -3,3 +3,4 @@ pycryptodome==3.20.0
 psutil==5.9.8
 fabric==3.2.2
 fan_tools==4.3.0
+pytest~=8.2

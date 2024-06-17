@@ -10,3 +10,12 @@ def make_hexfriendly(payload: bytes) -> str:
         if cnt % 4 == 0:
             out.append('\n')
     return '    '.join(out)
+
+
+def hex_to_bin(s: str) -> bytes:
+    """
+    convert hex string to binary
+    example string: 3C 61 70 70 59 50 54 4F    72 20 78 38 00 43 68 61
+                    70 65 6E 73 20 62 79 20    2C 20 43 52 30 20 66 6F
+    """
+    return bytes.fromhex(s.replace(' ', ''))
