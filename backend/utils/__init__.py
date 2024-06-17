@@ -1,7 +1,17 @@
-def make_hexfriendly(payload: bytes) -> str:
+from fan_tools.unix import succ
+from tempfile import NamedTemporaryFile
+
+def make_hexfriendly(payload: bytes, xxd=False) -> str:
     """
     split per 8, encode as hex values
     """
+    if xxd:
+        with NamedTemporaryFile() as f:
+            f.write(payload)
+            f.flush()
+            cmd = f'xxd -g 1 {f.name}'
+            code, output, err = succ(cmd)
+            return '\n'.join(output)
     out = ['']
     cnt = 0
     for i in range(0, len(payload), 8):
