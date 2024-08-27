@@ -54,19 +54,24 @@ def gen_key_iv():
             counter += 1
 
 
-def try_to_decode_network(line, args):
+def try_to_decode_network(line, args, dec: None | Salsa20.Salsa20Cipher = None, skip_bytes=0):
     """
     line format:
     sport=47732 dport=6112 buffer='eiNpPEU+30I0dA=='
     """
-    log.debug(f'Try to decode: {line}')
+    log.debug(f'Try to decode: {line} {skip_bytes=}')
     sport, dport, buffer = line.split()
-    buffer = b64decode(buffer.split("'")[1])[args.skip_bytes :]
+    buffer = b64decode(buffer.split("'")[1])[skip_bytes:]
+    log.debug(f'before decode {skip_bytes=}')
     log.debug(f'\n{make_hexfriendly(buffer, xxd=True)}')
-    for counter, key, iv in gen_key_iv():
-        log.debug(f'{counter=} {key=}')
-        dec = Salsa20.new(key=key, nonce=iv).decrypt(buffer)
-        log.debug(f'\n{make_hexfriendly(dec, xxd=True)}')
+    if not dec:
+        for counter, key, iv in gen_key_iv():
+            log.debug(f'{counter=} {key=}')
+            dec = Salsa20.new(key=key, nonce=iv)
+    decoded = dec.decrypt(buffer)
+    log.debug('after decode')
+    log.debug(f'\n{make_hexfriendly(decoded, xxd=True)}')
+    return dec
 
 
 def get_args():
@@ -80,10 +85,22 @@ def get_args():
 
 def main():
     args = get_args()
+    skip_two = True
+    dec = None
+    for counter, key, iv in gen_key_iv():
+        log.debug(f'{counter=} {key=}')
+        dec = Salsa20.new(key=key, nonce=iv)
+        if counter == args.use_key:
+            break
+
     with args.file.open() as f:
         lines = f.readlines()
-        line = lines[args.position]
-        try_to_decode_network(line, args)
+        for line in lines[args.position:]:
+            sport, dport, buffer = line.split()
+            if sport != 'sport=6112':
+                continue
+            dec = try_to_decode_network(line, args, dec, 2 if skip_two else 0)
+            skip_two = False
 
 
 if __name__ == '__main__':
