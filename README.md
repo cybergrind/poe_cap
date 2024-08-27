@@ -166,3 +166,22 @@ strace -f -e trace=network -o /tmp/traced.log  %command%
 
 strace -f -e trace=connect -o /tmp/traced.log  %command%
 ```
+
+
+## Signatures (FLIRT)
+
+https://hex-rays.com/blog/plugin-focus-generating-signatures-for-nim-and-other-non-c-programming-languages/
+
+scripts/generate_signatures.python3
+
+```bash
+./pcf cryptlib.lib cryptlib.pat
+./sigmake cryptlib.pat cryptlib.sig
+
+# remove 4 lines from top
+cat cryptlib.exc | ag -v '^\s*;.*$' > cryptlib.exc
+
+./sigmake cryptlib.pat cryptlib.sig
+# signature will be in file cryplib.sig
+```
+```
