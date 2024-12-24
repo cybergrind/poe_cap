@@ -1,3 +1,15 @@
+[project]
+name = 'poe_cap'
+version = '0.1.0'
+dependencies = [
+  'scapy==2.5.0',
+  'pycryptodome==3.20.0',
+  'psutil==5.9.8',
+  'fabric==3.2.2',
+  'fan_tools==4.3.0',
+  'pytest~=8.2',
+]
+
 [tool.ruff]
 line-length = 100
 select = [

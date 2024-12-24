@@ -185,3 +185,10 @@ cat cryptlib.exc | ag -v '^\s*;.*$' > cryptlib.exc
 # signature will be in file cryplib.sig
 ```
 ```
+
+
+### binarynina
+
+```
+./venv/bin/python /opt/binaryninja/scripts/install_api.py --install-on-pyenv
+```
