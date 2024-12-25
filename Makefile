@@ -28,7 +28,11 @@ py-server:
 
 socket_hook: other/socket_hook/socket_hook.c other/sample_client/client.exe
 	$(MAKE) -C other/socket_hook socket_hook.so
-	LD_PRELOAD=$(PWD)/other/socket_hook/socket_hook.so  wine64 ./other/sample_client/client.exe
+	rm /tmp/socket.log
+	LD_PRELOAD=$(PWD)/other/socket_hook/socket_hook.so wine64 ./other/sample_client/client.exe
+	@echo
+	@echo Logs:
+	cat /tmp/socket.log
 
 socket_hook32: other/socket_hook/socket_hook.c other/sample_client/client.exe
 	$(MAKE) -C other/socket_hook socket_hook_x32.so

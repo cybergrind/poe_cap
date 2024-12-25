@@ -27,10 +27,11 @@ void * dlsym( void * handle, const char * symbol )
         #endif
     }
 
-    printf("%s:dlsym() called %s\n", prefix, symbol);
+    FILE *fd = fopen("/tmp/dlsym.log", "a");
+    fprintf(fd, "%s:dlsym() called %s\n", prefix, symbol);
 
     if( !strcmp( symbol, "open"))
-        printf("open() called\n");
+        fprintf(fd, "open() called\n");
 
     return dlsym_real( handle, symbol );
 }
