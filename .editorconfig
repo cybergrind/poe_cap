@@ -24,5 +24,12 @@ indent_size = 2
 # emacs_py_save_touch = frontend/package.json
 
 
+[**.cpp]
+indent_size = 4
+
+[**.h]
+indent_size = 4
+
+
 [Makefile]
 indent_style = tab

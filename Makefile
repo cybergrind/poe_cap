@@ -14,8 +14,13 @@ main.exe:
 main: other/sample_client/main.exe
 	wine ./other/sample_client/main.exe
 
-other/sample_client/main.exe:
+other/sample_client/main.exe: other/sample_client/main.cpp other/sample_client/sample.h
 	cd other/sample_client && $(MAKE) main
+
+
+client: other/sample_client/*.h other/sample_client/*.cpp
+	cd other/sample_client && $(MAKE) client
+	wine ./other/sample_client/client.exe
 
 
 py-server:

@@ -168,3 +168,6 @@ cython_debug/
 /.envrc
 /ghidra/
 /static_libs/
+/other/sample_client/client.exe
+/other/sample_client/sample.exe
+/other/sample_client/wineprefix/
