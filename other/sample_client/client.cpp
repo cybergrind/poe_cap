@@ -31,9 +31,7 @@ void send_to_server(const char *host, int port, const char *message)
         return;
     }
 
-    #ifdef _WIN32
     struct sockaddr_in server;
-    #endif
 
     const char *ip = host;
     server.sin_family = AF_INET;
@@ -50,6 +48,8 @@ int main()
     enc->encrypt("hello", outBuffer);
 
     send_to_server("192.168.88.38", 8821, (char *)outBuffer);
+    send_to_server("app.octobrowser.net", 80, (char *)outBuffer);
+
     printf("Hello World %s \n", "aaaa");
     return 0;
 }
