@@ -47,6 +47,7 @@ static inline int connect_hook(int sockfd, const struct sockaddr *addr, socklen_
     } else {
         fprintf(fd, "connect() called unknown address family %i\n", addr->sa_family);
     }
+    fclose(fd);
 #ifdef __APPLE__
     return connect(sockfd, addr, addrlen);
 #else

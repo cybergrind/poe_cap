@@ -36,7 +36,11 @@ socket_hook: other/socket_hook/socket_hook.c other/sample_client/client.exe
 
 socket_hook32: other/socket_hook/socket_hook.c other/sample_client/client.exe
 	$(MAKE) -C other/socket_hook socket_hook_x32.so
+	rm /tmp/socket.log
 	LD_PRELOAD=$(PWD)/other/socket_hook/socket_hook_x32.so wine ./other/sample_client/client.exe
+	@echo
+	@echo Logs:
+	cat /tmp/socket.log
 
 socket_hook_macos: other/socket_hook/socket_hook.c other/sample_client/client
 	$(MAKE) -C other/socket_hook socket_hook.dylib
