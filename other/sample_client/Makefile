@@ -35,7 +35,6 @@ else
 		$(CXXFLAGS)
 	# strip unused
 	strip -s main.exe
-	wine main.exe
 endif
 
 
@@ -43,7 +42,6 @@ client: client.cpp *.h ../../external/cryptopp/libcryptopp.a
 	$(CXX) -o client client.cpp -I../../external/cryptopp -L../../external/cryptopp -lcryptopp \
 		$(CXXFLAGS)
 	strip -s client.exe
-	wine client.exe
 
 sample: sample.cpp ../../external/cryptopp/libcryptopp.a
 	$(CXX) -o sample sample.cpp -I../../external/cryptopp -L../../external/cryptopp -lcryptopp

@@ -49,7 +49,7 @@ int main()
     CryptoPP::byte outBuffer[16];
     enc->encrypt("hello", outBuffer);
 
-    send_to_server("127.0.0.1", 8821, (char *)outBuffer);
+    send_to_server("192.168.88.38", 8821, (char *)outBuffer);
     printf("Hello World %s \n", "aaaa");
     return 0;
 }
