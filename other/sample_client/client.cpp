@@ -7,6 +7,14 @@
 #include <unistd.h>
 #endif
 
+
+#ifdef __APPLE__
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#endif
+
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -37,7 +45,7 @@ void send_to_server(const char *host, int port, const char *message)
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
     server.sin_addr.s_addr = inet_addr(ip);
-    connect(sock, (struct sockaddr *)&server, sizeof(server));
+    (void) connect(sock, (struct sockaddr *)&server, sizeof(server));
     send(sock, message, strlen(message), 0);
 }
 
@@ -47,7 +55,7 @@ int main()
     CryptoPP::byte outBuffer[16];
     enc->encrypt("hello", outBuffer);
 
-    send_to_server("192.168.88.38", 8821, (char *)outBuffer);
+    send_to_server("127.0.0.1", 8821, (char *)outBuffer);
     send_to_server("app.octobrowser.net", 80, (char *)outBuffer);
 
     printf("Hello World %s \n", "aaaa");

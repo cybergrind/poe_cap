@@ -7,6 +7,10 @@ ifeq ($(USE_TOOLCHAIN), linux)
 CXXFLAGS=-O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic \
 	-lstdc++ -lpthread -Wl,-Bdynamic \
 	-march=native -mtune=native -fno-stack-protector -fno-strict-aliasing
+else ifeq ($(USE_TOOLCHAIN), macos)
+CXXFLAGS=-O3 \
+	-lstdc++ -lpthread -stdlib=libc++ \
+	-mtune=native -fno-stack-protector -fno-strict-aliasing
 else
 CXXFLAGS=-O3 -static-libgcc -static-libstdc++ -Wl,-Bstatic \
 	-lstdc++ -lpthread -Wl,-Bdynamic -lws2_32 -lgdi32 -lcrypt32 -luser32 -lkernel32 -static \
@@ -21,6 +25,10 @@ ifeq ($(USE_TOOLCHAIN), linux-clang)
 else ifeq ($(USE_TOOLCHAIN), linux)
 	CC=gcc
 	CXX=g++
+	CXXFLAGS+=
+else ifeq ($(USE_TOOLCHAIN), macos)
+	CC=clang
+	CXX=clang++
 	CXXFLAGS+=
 else ifeq ($(USE_TOOLCHAIN), windows-clang)
 	CC=clang
@@ -79,4 +87,3 @@ endif
 clean:
 	rm -f main main.exe sample
 	cd ../../external/cryptopp && make clean
-

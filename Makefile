@@ -38,6 +38,10 @@ socket_hook32: other/socket_hook/socket_hook.c other/sample_client/client.exe
 	$(MAKE) -C other/socket_hook socket_hook_x32.so
 	LD_PRELOAD=$(PWD)/other/socket_hook/socket_hook_x32.so wine ./other/sample_client/client.exe
 
+socket_hook_macos: other/socket_hook/socket_hook.c other/sample_client/client
+	$(MAKE) -C other/socket_hook socket_hook.dylib
+	DYLD_INSERT_LIBRARIES=$(PWD)/other/socket_hook/socket_hook.dylib DYLD_FORCE_FLAT_NAMESPACE=1 ./other/sample_client/client
+
 
 dlsym_hook: other/socket_hook/dlsym_hook.so other/socket_hook/dlsym_hook.c
 	$(MAKE) -C other/socket_hook dlsym_hook.so
