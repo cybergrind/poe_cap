@@ -1,6 +1,6 @@
 
 socket_hook.so: socket_hook.c
-	gcc -shared -fPIC -o socket_hook.so socket_hook.c -ldl
+	gcc -shared -fPIC -o socket_hook.so socket_hook.c -ldl -O2
 
 # macos
 socket_hook.dylib: socket_hook.c
