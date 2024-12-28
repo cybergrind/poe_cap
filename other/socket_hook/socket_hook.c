@@ -22,7 +22,7 @@ int socket(int domain, int type, int protocol) {
 #ifdef __APPLE__
 int connect_hook(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 #else
-inline int connect_hook(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+static inline int connect_hook(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
     static int (*real_connect)(int, const struct sockaddr *, socklen_t) = NULL;
     if (!real_connect) {
         real_connect = dlsym(RTLD_NEXT, "connect");
