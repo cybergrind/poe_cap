@@ -24,7 +24,7 @@ indent_size = 2
 # emacs_py_save_touch = frontend/package.json
 
 
-[**.cpp]
+[**.{c,cpp}]
 indent_size = 4
 
 [**.h]

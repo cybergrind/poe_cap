@@ -4,19 +4,98 @@
 #include <sys/un.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 
 // hook all socket calls
 
-int socket(int domain, int type, int protocol) {
+#ifdef __APPLE__
+int socket_hook(int domain, int type, int protocol) {
+#else
+static inline int socket_hook(int domain, int type, int protocol) {
     static int (*real_socket)(int, int, int) = NULL;
     if (!real_socket) {
         real_socket = dlsym(RTLD_NEXT, "socket");
     }
-
+#endif
 
     FILE *fd = fopen("/tmp/socket.log", "a");
-    fprintf(fd, "socket() called %i %i %i\n", domain, type, protocol);
-    return real_socket(domain, type, protocol);
+    fprintf(fd, "socket() called  %i / %i / %i\n", domain, type, protocol);
+    fsync(fileno(fd));
+
+    char type_string[20];
+    sprintf(type_string, "UNKNOWN/%i", type);
+
+    switch (type) {
+        case SOCK_STREAM:
+            strcpy(type_string, "SOCK_STREAM");
+            break;
+        case SOCK_DGRAM:
+            strcpy(type_string, "SOCK_DGRAM");
+            break;
+        case SOCK_RAW:
+            strcpy(type_string, "SOCK_RAW");
+            break;
+        case SOCK_SEQPACKET:
+            strcpy(type_string, "SOCK_SEQPACKET");
+            break;
+        case SOCK_RDM:
+            strcpy(type_string, "SOCK_RDM");
+            break;
+    }
+    char domain_string[20] = { };
+    sprintf(domain_string, "UNKNOWN/%i", domain);
+
+    switch (domain) {
+        case AF_INET:
+            strcpy(domain_string, "AF_INET");
+            break;
+        case AF_INET6:
+            strcpy(domain_string, "AF_INET6");
+            break;
+        case AF_UNIX:
+            strcpy(domain_string, "AF_UNIX");
+            break;
+        case AF_UNSPEC:
+            strcpy(domain_string, "AF_UNSPEC");
+            break;
+    }
+    char protocol_string[20];
+    sprintf(protocol_string, "UNKNOWN/%i", protocol);
+
+    switch (protocol) {
+        case IPPROTO_IP:
+            strcpy(protocol_string, "IPPROTO_IP");
+            break;
+        case IPPROTO_ICMP:
+            strcpy(protocol_string, "IPPROTO_ICMP");
+            break;
+        case IPPROTO_TCP:
+            strcpy(protocol_string, "IPPROTO_TCP");
+            break;
+        case IPPROTO_UDP:
+            strcpy(protocol_string, "IPPROTO_UDP");
+            break;
+        case IPPROTO_IPV6:
+            strcpy(protocol_string, "IPPROTO_IPV6");
+            break;
+        case IPPROTO_ICMPV6:
+            strcpy(protocol_string, "IPPROTO_ICMPV6");
+            break;
+        case IPPROTO_RAW:
+            strcpy(protocol_string, "IPPROTO_RAW");
+            break;
+    }
+
+    int sockfd;
+#ifdef __APPLE__
+    sockfd = socket(domain, type, protocol);
+#else
+    sockfd = real_socket(domain, type, protocol);
+#endif
+
+    fprintf(fd, "socket(%s, %s, %s) => %i\n", domain_string, type_string, protocol_string, sockfd);
+    fclose(fd);
+    return sockfd;
 }
 
 #ifdef __APPLE__
@@ -28,6 +107,7 @@ static inline int connect_hook(int sockfd, const struct sockaddr *addr, socklen_
         real_connect = dlsym(RTLD_NEXT, "connect");
     }
 #endif
+
     FILE *fd = fopen("/tmp/socket.log", "a");
 
     if (addr->sa_family == AF_INET) {
@@ -48,6 +128,7 @@ static inline int connect_hook(int sockfd, const struct sockaddr *addr, socklen_
         fprintf(fd, "connect() called unknown address family %i\n", addr->sa_family);
     }
     fclose(fd);
+
 #ifdef __APPLE__
     return connect(sockfd, addr, addrlen);
 #else
@@ -65,6 +146,9 @@ static inline int connect_hook(int sockfd, const struct sockaddr *addr, socklen_
 
 DYLD_INTERPOSE(connect_hook, connect);
 #else
+int socket(int domain, int type, int protocol) {
+    return socket_hook(domain, type, protocol);
+}
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
     return connect_hook(sockfd, addr, addrlen);
 }
