@@ -5,6 +5,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#ifdef __linux__
+#include <linux/netlink.h>
+#endif
 
 // hook all socket calls
 
@@ -170,6 +173,47 @@ static inline ssize_t sendto_hook(int sockfd, const void *buf, size_t len, int f
 }
 
 #ifdef __APPLE__
+int bind_hook(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+#else
+static inline int bind_hook(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+    static int (*real_bind)(int, const struct sockaddr *, socklen_t) = NULL;
+    if (!real_bind) {
+        real_bind = dlsym(RTLD_NEXT, "bind");
+    }
+#endif
+    FILE *fd = fopen("/tmp/socket.log", "a");
+    char *address[addrlen] = {};
+    if (addr->sa_family == AF_INET) {
+        struct sockaddr_in *addr_in = (struct sockaddr_in *) addr;
+        char *ip = inet_ntoa(addr_in->sin_addr);
+        int port = ntohs(addr_in->sin_port);
+        fprintf(fd, "bind() called %s %i\n", ip, port);
+    } else if (addr->sa_family == AF_INET6) {
+        struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *) addr;
+        char ip[INET6_ADDRSTRLEN];
+        inet_ntop(AF_INET6, &addr_in6->sin6_addr, ip, INET6_ADDRSTRLEN);
+        int port = ntohs(addr_in6->sin6_port);
+        fprintf(fd, "bind() called %s %i\n", ip, port);
+    } else if (addr-> sa_family == AF_UNIX) {
+        struct sockaddr_un *addr_un = (struct sockaddr_un *) addr;
+        fprintf(fd, "bind() called for UNIX socket %s\n", addr_un->sun_path);
+#ifdef __linux__
+    } else if (addr->sa_family == AF_NETLINK) {
+        struct sockaddr_nl *addr_nl = (struct sockaddr_nl *) addr;
+        fprintf(fd, "bind() called for NETLINK socket %i\n", addr_nl->nl_groups);
+#endif
+    } else {
+        fprintf(fd, "bind() called unknown address family %i\n", addr->sa_family);
+    }
+    fclose(fd);
+#ifdef __APPLE__
+    return bind(sockfd, addr, addrlen);
+#else
+    return real_bind(sockfd, addr, addrlen);
+#endif
+}
+
+#ifdef __APPLE__
 #define DYLD_INTERPOSE(_replacement, _replacee) \
     __attribute__((used)) static struct { \
         const void *replacement; \
@@ -180,6 +224,7 @@ static inline ssize_t sendto_hook(int sockfd, const void *buf, size_t len, int f
 DYLD_INTERPOSE(connect_hook, connect);
 DYLD_INTERPOSE(socket_hook, socket);
 DYLD_INTERPOSE(sendto_hook, sendto);
+DYLD_INTERPOSE(bind_hook, bind);
 #else
 int socket(int domain, int type, int protocol) {
     return socket_hook(domain, type, protocol);
@@ -189,5 +234,8 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 }
 ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
     return sendto_hook(sockfd, buf, len, flags, dest_addr, addrlen);
+}
+int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+    return bind_hook(sockfd, addr, addrlen);
 }
 #endif
