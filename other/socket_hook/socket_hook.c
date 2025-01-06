@@ -136,6 +136,39 @@ static inline int connect_hook(int sockfd, const struct sockaddr *addr, socklen_
 #endif
 }
 
+void write_hex_bytes(FILE *fd, const void *buf, size_t len) {
+    for (size_t i = 0; i < len; i++) {
+        fprintf(fd, "%02x ", ((unsigned char *) buf)[i]);
+    }
+    // now as chars:
+    for (size_t i = 0; i < len; i++) {
+        fprintf(fd, "%c", ((unsigned char *) buf)[i]);
+    }
+    fprintf(fd, "\n");
+}
+
+
+#ifdef __APPLE__
+ssize_t sendto_hook(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
+#else
+static inline ssize_t sendto_hook(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
+    static int (*real_sendto)(int, const void *, size_t, int, const struct sockaddr *, socklen_t) = NULL;
+    if (!real_sendto) {
+        real_sendto = dlsym(RTLD_NEXT, "sendto");
+    }
+#endif
+    FILE *fd = fopen("/tmp/socket.log", "a");
+    fprintf(fd, "sendto() called\n");
+    fprintf(fd, "sendto content: ");
+    write_hex_bytes(fd, buf, len);
+    fclose(fd);
+#ifdef __APPLE__
+    return sendto(sockfd, buf, len, flags, dest_addr, addrlen);
+#else
+    return real_sendto(sockfd, buf, len, flags, dest_addr, addrlen);
+#endif
+}
+
 #ifdef __APPLE__
 #define DYLD_INTERPOSE(_replacement, _replacee) \
     __attribute__((used)) static struct { \
@@ -145,11 +178,16 @@ static inline int connect_hook(int sockfd, const struct sockaddr *addr, socklen_
     __attribute__ ((section ("__DATA,__interpose"))) = { (const void *)(unsigned long)&_replacement, (const void *)(unsigned long)&_replacee };
 
 DYLD_INTERPOSE(connect_hook, connect);
+DYLD_INTERPOSE(socket_hook, socket);
+DYLD_INTERPOSE(sendto_hook, sendto);
 #else
 int socket(int domain, int type, int protocol) {
     return socket_hook(domain, type, protocol);
 }
 int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
     return connect_hook(sockfd, addr, addrlen);
+}
+ssize_t sendto(int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen) {
+    return sendto_hook(sockfd, buf, len, flags, dest_addr, addrlen);
 }
 #endif
